@@ -1,0 +1,139 @@
+---
+title: "Uma síntese do saneamento básico brasileiro com uma perspectiva estatística."
+author: "Vítor Pereira"
+abstract: "abstract"
+header-includes:
+   - \usepackage[brazil]{babel}
+   - \usepackage{bm}
+   - \usepackage{float}
+geometry: left=1.7cm, right=1.7cm, top=3cm, bottom=3cm
+output:
+  bookdown::pdf_document2:
+editor_options:
+  chunk_output_type: console
+indent: true
+---
+
+
+
+```{r setup, include=F}
+
+options(digits = 3)  
+options(scipen = 999)
+ggplot2::theme_set(ggplot2::theme_minimal()) 
+knitr::opts_chunk$set(echo=F, message=F, warning=F, fig.pos = 'H', 
+                      fig.align = 'center', fig.width = 6, fig.height= 3.4)
+scale_fill_discrete = \(...) ggplot2::scale_fill_brewer(... , palette = "Set2") 
+```
+
+
+\section{Section name}
+```{r}
+library(tidyverse) # manipulacoes do BD
+library(betareg) # pacote da regressao beta
+library(zoo) # acessa o indice das obs
+library(ggplot2) # para graficos
+library(qqplotr) # Graficos e envelope no ggplot2
+library(plotly) # graficos interativos
+
+
+data = readr::read_csv('./data/data_modificado.csv')
+df = data[2:28, 2:ncol(data)]
+df = df %>% 
+  mutate(Saneamento = 
+           `% da população urbana residente em domicílios ligados à rede de esgotamento sanitário 2017`/100)
+fit1 <- betareg(Saneamento ~ `% dos ocupados com ensino fundamental completo 2010`
+                + `Produto Interno Bruto per capita 2016` + `% de pobres 2016` +
+                  `Índice de Gini 2016` + 
+                  `Participação da Indústria no Valor Adicionado 2016`, 
+                data = df, x=TRUE)
+
+summary(fit1)
+library(lmtest)         # Teste reset
+lrtest(fit1, . ~ . + 
+         I(predict(fit1, type = "link")^2))
+lrtest(fit1, . ~ . + 
+         I(predict(fit1, type = "link")^3))
+
+residuot2<- residuals(fit1, type= "sweighted2")
+yajust<-fitted.values(fit1)
+yhat=hatvalues(fit1)
+dcook<- cooks.distance(fit1)
+
+deviance<- sum(residuals(fit1, tipe= "deviance")^2)
+
+#---indices X residuos
+g_indexres=ggplot2::ggplot(df, aes(x=index(Saneamento),
+                                              y=residuot2))+
+  geom_point(size=1.5) + 
+  geom_hline(yintercept=3, colour="red2", 
+             linewidth=0.5,  linetype="dashed") +
+  geom_hline(yintercept=0, colour="black", 
+             linewidth=0.7, linetype="dashed") +  
+  geom_hline(yintercept=-3, colour="red2", 
+             linewidth=0.5,  linetype="dashed")+
+  labs(x = "Índices das observações", y = "Resíduos")
+g_indexres
+ggplotly(g_indexres)
+
+#---indices X medida h, hat values
+medidah=ggplot(GasolineYield, aes(x=index(yield), y=yhat))+
+  geom_point(size=1.5) + 
+  labs(x = "Índice das observações", y = "htt")
+medidah
+ggplotly(medidah)
+#--- y vs residuos
+yxres=ggplot(GasolineYield, aes(x=yield, y=residuot2))+
+  geom_point(size=1.5) + 
+  geom_hline(yintercept=3, colour="red2", 
+             size=0.5,  linetype="dashed") +
+  geom_hline(yintercept=0, colour="black", 
+             size=0.7, linetype="dashed") +  
+  geom_hline(yintercept=-3, colour="red2", 
+             size=0.5,  linetype="dashed")+
+  labs(x = "y", y = "Resíduos")
+yxres
+ggplotly(yxres)
+
+#--- Y ajustado vs resíduos Padronizados 2
+g_ajres=ggplot(GasolineYield, aes(x=yajust, y=residuot2))+
+  geom_point(size=1.5) + 
+  geom_hline(yintercept=3, colour="red2", size=0.5, 
+             linetype="dashed") +
+  geom_hline(yintercept=0, colour="black", size=0.7,
+             linetype="dashed") +  
+  geom_hline(yintercept=-3, colour="red2", size=0.5, 
+             linetype="dashed")+
+  labs(x = "y ajustado", y = "Resíduos")
+g_ajres
+ggplotly(g_ajres)
+
+#--- Distancia de Cook | influencia de uma observacao em relaçao a todos os n valores
+g_cook=ggplot(GasolineYield, aes(x=index(yield), 
+                                 y= dcook))+
+  geom_point(size=1.5)+
+  labs(x = "Índices", y = "Distância de Cook")
+ggplotly(g_cook)
+
+#--- y vs y ajustado
+ggplot(GasolineYield, aes(x=yield, y=yajust))+
+  geom_point(size=1.5) + 
+  geom_smooth(method = "lm", linetype ="dashed",
+              size=0.5, col = "blue")+
+  labs(x = "y observado", y = "y ajustado")
+
+residuot2_df<- data.frame(residuot2)
+
+## grafico envelope
+ggplot(data = residuot2_df, 
+       mapping = aes(sample = residuot2))+
+  geom_qq_band( alpha = 0.5, fill="white", col="black") +
+  
+  stat_qq_line(size=0.5, linetype="dashed") + 
+  stat_qq_point(size=2) +
+  scale_fill_discrete("Bandtype")  +
+  labs(x = "Quantis teóricos", y = "Quantis amostrais")
+
+```
+
+
