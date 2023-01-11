@@ -17,7 +17,6 @@ indent: true
 
 
 ```{r setup, include=F}
-
 options(digits = 3)  
 options(scipen = 999)
 ggplot2::theme_set(ggplot2::theme_minimal()) 
@@ -26,8 +25,6 @@ knitr::opts_chunk$set(echo=F, message=F, warning=F, fig.pos = 'H',
 scale_fill_discrete = \(...) ggplot2::scale_fill_brewer(... , palette = "Set2") 
 ```
 
-
-\section{Section name}
 ```{r}
 library(tidyverse) # manipulacoes do BD
 library(betareg) # pacote da regressao beta
@@ -36,24 +33,73 @@ library(ggplot2) # para graficos
 library(qqplotr) # Graficos e envelope no ggplot2
 library(plotly) # graficos interativos
 
+boxplot <- function(v1){
+  ggplot(df, aes(x=Avaliacao_Saneamento, y={{v1}}, fill = Avaliacao_Saneamento)) + 
+    geom_boxplot(alpha=0.3) +
+    theme(legend.position="none")
+
+}
+
+density <- function(v1){
+  ggplot(data=df, aes(x={{v1}})) +
+    geom_density(adjust=1.5, alpha=.4)
+}
+
+dot <- function(v1){
+  ggplot(df, aes(x={{v1}}, y=Saneamento)) +
+  geom_point() +
+  geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE) 
+}
+
 
 data = readr::read_csv('./data/data_modificado.csv')
 df = data[2:28, 2:ncol(data)]
 df = df %>% 
   mutate(Saneamento = 
            `% da população urbana residente em domicílios ligados à rede de esgotamento sanitário 2017`/100)
-fit1 <- betareg(Saneamento ~ `% dos ocupados com ensino fundamental completo 2010`
-                + `Produto Interno Bruto per capita 2016` + `% de pobres 2016` +
-                  `Índice de Gini 2016` + 
-                  `Participação da Indústria no Valor Adicionado 2016`, 
+df = df %>% 
+  mutate(Avaliacao_Saneamento = case_when(
+                                            (Saneamento < 0.2) ~ 'Péssimo',
+                                            (Saneamento >= 0.2 & Saneamento < 0.4) ~ 'Ruim',
+                                            (Saneamento >= 0.4 & Saneamento < 0.6) ~ 'Médio',
+                                            (Saneamento >= 0.6) ~ 'Bom'))
+```
+
+
+# Introdução
+Saneamento básico é um conjunto de ações e serviços que visam garantir a saúde e o bem-estar da população, por meio do fornecimento de água potável, coleta e tratamento de esgoto, limpeza urbana e gestão de resíduos sólidos. No Brasil, o saneamento básico é responsabilidade dos municípios, embora haja uma participação do Estado e da União na sua elaboração e financiamento.
+Infelizmente, o saneamento básico no Brasil ainda é insuficiente e ineficiente em muitas áreas do país. De acordo com dados do Instituto Trata Brasil, cerca de 96% da população urbana brasileira possui acesso à água tratada, mas apenas 61% têm coleta de esgoto. Além disso, apenas 36% do esgoto gerado é tratado adequadamente. Isso causa sérios problemas ambientais e de saúde pública, além de ser uma barreira para o desenvolvimento econômico.
+Para melhorar a situação, o governo brasileiro tem implementado diversas políticas e programas de saneamento básico, como o Plano Nacional de Saneamento Básico (Plansab) e o Programa de Aceleração do Crescimento (PAC). Esses programas visam ampliar o acesso à água tratada e ao esgoto tratado, bem como aumentar a eficiência e a qualidade dos serviços de saneamento. Além disso, é importante que haja uma maior transparência e fiscalização dos serviços de saneamento, para garantir que os recursos sejam utilizados de forma eficiente e que os cidadãos possam exercer seu direito de acesso a esses serviços.
+
+
+# Análise Exploratória
+
+
+
+# Análise Inferencial
+
+# Conclusão
+
+# Apêndice
+
+\section{Section name}
+```{r}
+
+fit1 <- betareg(Saneamento ~ 
+                  `% de docentes na rede privada do fundamental com formação adequada 2016` +
+                  `IDEB anos iniciais do ensino fundamental 2015`+
+                  `% de cobertura vegetal natural 2016` +
+                  `% de pobres 2016` +
+                  `Índice de Gini 2016`, 
                 data = df, x=TRUE)
 
 summary(fit1)
-library(lmtest)         # Teste reset
-lrtest(fit1, . ~ . + 
-         I(predict(fit1, type = "link")^2))
-lrtest(fit1, . ~ . + 
-         I(predict(fit1, type = "link")^3))
+
+# library(lmtest)         # Teste reset
+# lrtest(fit1, . ~ . + 
+#          I(predict(fit1, type = "link")^2))
+# lrtest(fit1, . ~ . + 
+#          I(predict(fit1, type = "link")^3))
 
 residuot2<- residuals(fit1, type= "sweighted2")
 yajust<-fitted.values(fit1)
@@ -63,8 +109,7 @@ dcook<- cooks.distance(fit1)
 deviance<- sum(residuals(fit1, tipe= "deviance")^2)
 
 #---indices X residuos
-g_indexres=ggplot2::ggplot(df, aes(x=index(Saneamento),
-                                              y=residuot2))+
+ggplot(df, aes(x=index(Saneamento),y=residuot2))+
   geom_point(size=1.5) + 
   geom_hline(yintercept=3, colour="red2", 
              linewidth=0.5,  linetype="dashed") +
@@ -73,30 +118,22 @@ g_indexres=ggplot2::ggplot(df, aes(x=index(Saneamento),
   geom_hline(yintercept=-3, colour="red2", 
              linewidth=0.5,  linetype="dashed")+
   labs(x = "Índices das observações", y = "Resíduos")
-g_indexres
-ggplotly(g_indexres)
-
 #---indices X medida h, hat values
-medidah=ggplot(GasolineYield, aes(x=index(yield), y=yhat))+
+ggplot(df, aes(x=index(Saneamento), y=yhat))+
   geom_point(size=1.5) + 
   labs(x = "Índice das observações", y = "htt")
-medidah
-ggplotly(medidah)
 #--- y vs residuos
-yxres=ggplot(GasolineYield, aes(x=yield, y=residuot2))+
+ggplot(df, aes(x=Saneamento, y=residuot2))+
   geom_point(size=1.5) + 
   geom_hline(yintercept=3, colour="red2", 
-             size=0.5,  linetype="dashed") +
+             linewidth=0.5,  linetype="dashed") +
   geom_hline(yintercept=0, colour="black", 
-             size=0.7, linetype="dashed") +  
+             linewidth=0.7, linetype="dashed") +  
   geom_hline(yintercept=-3, colour="red2", 
-             size=0.5,  linetype="dashed")+
+            linewidth=0.5,  linetype="dashed")+
   labs(x = "y", y = "Resíduos")
-yxres
-ggplotly(yxres)
-
 #--- Y ajustado vs resíduos Padronizados 2
-g_ajres=ggplot(GasolineYield, aes(x=yajust, y=residuot2))+
+ggplot(df, aes(x=yajust, y=residuot2))+
   geom_point(size=1.5) + 
   geom_hline(yintercept=3, colour="red2", size=0.5, 
              linetype="dashed") +
@@ -105,18 +142,13 @@ g_ajres=ggplot(GasolineYield, aes(x=yajust, y=residuot2))+
   geom_hline(yintercept=-3, colour="red2", size=0.5, 
              linetype="dashed")+
   labs(x = "y ajustado", y = "Resíduos")
-g_ajres
-ggplotly(g_ajres)
 
 #--- Distancia de Cook | influencia de uma observacao em relaçao a todos os n valores
-g_cook=ggplot(GasolineYield, aes(x=index(yield), 
-                                 y= dcook))+
+ggplot(df, aes(x=index(Saneamento), y= dcook))+
   geom_point(size=1.5)+
   labs(x = "Índices", y = "Distância de Cook")
-ggplotly(g_cook)
-
 #--- y vs y ajustado
-ggplot(GasolineYield, aes(x=yield, y=yajust))+
+ggplot(df, aes(x=Saneamento, y=yajust))+
   geom_point(size=1.5) + 
   geom_smooth(method = "lm", linetype ="dashed",
               size=0.5, col = "blue")+
@@ -136,4 +168,77 @@ ggplot(data = residuot2_df,
 
 ```
 
+
+```{r}
+fit1 <- betareg(Saneamento ~ 
+                  `% de docentes na rede privada do fundamental com formação adequada 2016` +
+                  `IDEB anos iniciais do ensino fundamental 2015`+
+                  `% de cobertura vegetal natural 2016` +
+                  `% de pobres 2016` +
+                  `Índice de Gini 2016`, 
+                data = df, x=TRUE)
+
+summary(fit1)
+#para acessar o pseudo-R2
+fit1$pseudo.r.squared
+# para acessar o valor de AIC e BIC
+AIC(fit1)
+BIC(fit1)
+n=length(fit1$y)
+k=1+length(fit1$coefficients$mean)
+BICc=-2*fit1$loglik+(n*k*log(n)/(n-k-1))
+HQ=-2*fit1$loglik+(2*k*log(n))
+HQc=-2*fit1$loglik+(2*k*log(log(n))/(n-k-1))
+
+
+fit1 <- betareg(Saneamento ~ 
+                  `% de docentes na rede privada do fundamental com formação adequada 2016` +
+                  `IDEB anos iniciais do ensino fundamental 2015`+
+                  `% de cobertura vegetal natural 2016` +
+                  `% de pobres 2016` +
+                  `Índice de Gini 2016`, 
+                data = df, x=TRUE)
+
+fit1a <- betareg(Saneamento ~ 
+                  `% de docentes na rede privada do fundamental com formação adequada 2016` +
+                  `IDEB anos iniciais do ensino fundamental 2015`+
+                  `% de cobertura vegetal natural 2016` +
+                  `% de pobres 2016` +
+                  `Índice de Gini 2016`, 
+                data = df, x=TRUE,
+                 link = "probit")
+
+fit1b <- betareg(Saneamento ~ 
+                  `% de docentes na rede privada do fundamental com formação adequada 2016` +
+                  `IDEB anos iniciais do ensino fundamental 2015`+
+                  `% de cobertura vegetal natural 2016` +
+                  `% de pobres 2016` +
+                  `Índice de Gini 2016`, 
+                data = df, x=TRUE,
+                 link = "cloglog")
+
+fit1c <- betareg(Saneamento ~ 
+                  `% de docentes na rede privada do fundamental com formação adequada 2016` +
+                  `IDEB anos iniciais do ensino fundamental 2015`+
+                  `% de cobertura vegetal natural 2016` +
+                  `% de pobres 2016` +
+                  `Índice de Gini 2016`, 
+                data = df, x=TRUE,
+                 link = "cauchit")
+
+fit1d <- betareg(Saneamento ~ 
+                  `% de docentes na rede privada do fundamental com formação adequada 2016` +
+                  `IDEB anos iniciais do ensino fundamental 2015`+
+                  `% de cobertura vegetal natural 2016` +
+                  `% de pobres 2016` +
+                  `Índice de Gini 2016`, 
+                data = df, x=TRUE,
+                 link = "loglog")
+
+AIC(fit1, fit1a, fit1b, fit1c, fit1d)
+BIC(fit1, fit1a, fit1b, fit1c, fit1d)
+
+fit1=fit1d
+plot(fit1, which = 1:6)
+```
 
