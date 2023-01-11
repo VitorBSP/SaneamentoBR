@@ -26,12 +26,14 @@ scale_fill_discrete = \(...) ggplot2::scale_fill_brewer(... , palette = "Set2")
 ```
 
 ```{r}
-library(tidyverse) # manipulacoes do BD
-library(betareg) # pacote da regressao beta
-library(zoo) # acessa o indice das obs
-library(ggplot2) # para graficos
-library(qqplotr) # Graficos e envelope no ggplot2
-library(plotly) # graficos interativos
+library(dplyr)
+library(magrittr)
+library(betareg) 
+library(zoo) 
+library(ggplot2) 
+library(qqplotr) 
+library(patchwork)
+
 
 boxplot <- function(v1){
   ggplot(df, aes(x=Avaliacao_Saneamento, y={{v1}}, fill = Avaliacao_Saneamento)) + 
@@ -53,7 +55,9 @@ dot <- function(v1){
 
 
 data = readr::read_csv('./data/data_modificado.csv')
+
 df = data[2:28, 2:ncol(data)]
+
 df = df %>% 
   mutate(Saneamento = 
            `% da população urbana residente em domicílios ligados à rede de esgotamento sanitário 2017`/100)
@@ -62,8 +66,13 @@ df = df %>%
                                             (Saneamento < 0.2) ~ 'Péssimo',
                                             (Saneamento >= 0.2 & Saneamento < 0.4) ~ 'Ruim',
                                             (Saneamento >= 0.4 & Saneamento < 0.6) ~ 'Médio',
-                                            (Saneamento >= 0.6) ~ 'Bom'))
+                                            (Saneamento >= 0.6) ~ 'Bom')) %>%
+  mutate(Avaliacao_Saneamento = ordered(Avaliacao_Saneamento, 
+                                        levels = c("Péssimo", "Ruim", "Médio",
+                                                   "Bom")))
+
 ```
+
 
 
 # Introdução
@@ -74,6 +83,20 @@ Para melhorar a situação, o governo brasileiro tem implementado diversas polí
 
 # Análise Exploratória
 
+```{r}
+boxplot(`% dos ocupados com ensino fundamental completo 2010`) +
+  density(`% dos ocupados com ensino fundamental completo 2010`)
+```
+
+```{r}
+boxplot(`% dos ocupados com ensino médio completo 2010`) +
+  density(`% dos ocupados com ensino médio completo 2010`)
+```
+
+```{r}
+boxplot(`% dos ocupados com ensino superior completo 2010`) +
+  density(`% dos ocupados com ensino superior completo 2010`)
+```
 
 
 # Análise Inferencial
