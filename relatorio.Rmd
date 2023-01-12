@@ -76,36 +76,174 @@ df = df %>%
 
 
 # Introdução
-Saneamento básico é um conjunto de ações e serviços que visam garantir a saúde e o bem-estar da população, por meio do fornecimento de água potável, coleta e tratamento de esgoto, limpeza urbana e gestão de resíduos sólidos. No Brasil, o saneamento básico é responsabilidade dos municípios, embora haja uma participação do Estado e da União na sua elaboração e financiamento.
-Infelizmente, o saneamento básico no Brasil ainda é insuficiente e ineficiente em muitas áreas do país. De acordo com dados do Instituto Trata Brasil, cerca de 96% da população urbana brasileira possui acesso à água tratada, mas apenas 61% têm coleta de esgoto. Além disso, apenas 36% do esgoto gerado é tratado adequadamente. Isso causa sérios problemas ambientais e de saúde pública, além de ser uma barreira para o desenvolvimento econômico.
-Para melhorar a situação, o governo brasileiro tem implementado diversas políticas e programas de saneamento básico, como o Plano Nacional de Saneamento Básico (Plansab) e o Programa de Aceleração do Crescimento (PAC). Esses programas visam ampliar o acesso à água tratada e ao esgoto tratado, bem como aumentar a eficiência e a qualidade dos serviços de saneamento. Além disso, é importante que haja uma maior transparência e fiscalização dos serviços de saneamento, para garantir que os recursos sejam utilizados de forma eficiente e que os cidadãos possam exercer seu direito de acesso a esses serviços.
+
+A ideia do presente trabalho é estudar, conscientizar e divulgar com abordagem estatística rigorosa a situação do saneamento básico brasileiro, que é caracterizado como o conjunto de ações e serviços que visam garantir a saúde e o bem-estar da população, por meio do fornecimento de água potável, coleta e tratamento de esgoto, limpeza urbana e gestão de resíduos sólidos por meio de índices e taxas dos 26 estados e do Distrito Federal. 
+
+Segundo o Instituto Trata Brasil, 96% da população urbana brasileira possui acesso à água potável, mas apenas 61% têm coleta de esgoto. No entanto, apenas 36% do esgotoé tratado corretamente. Posto isso, teremos como objetivo analisar a variável a porcentagem da população urbana residente em domicílios ligados à rede de esgotamento sanitário no ano de 2017, devido ao seu enorme impacto ambiental e de saúde pública. . 
+
+Infelizmente, o saneamento básico no Brasil ainda é insuficiente e ineficiente em muitas áreas do país e para melhorar a situação, o governo brasileiro tem implementado diversas políticas e programas de saneamento básico, como o Plano Nacional de Saneamento Básico (Plansab) e o Programa de Aceleração do Crescimento (PAC). Esses programas visam ampliar o acesso à água tratada e ao esgoto tratado, bem como aumentar a eficiência e a qualidade dos serviços de saneamento. 
+
+Os índices e taxas de variáveis econômicas, educacionais, de saúde e sociais que utilizaremos para melhorar a compreensão da situação da variável objetivo. É importante ressaltar que as variáveis não necessariamente causam a precariedade ou a qualidade do saneamento, mas servem para estimar outras variáveis: Qualidade das políticas públicas e desenvolvimento dos estados que são as variáveis que mais interferem nos níveis de higiene do sistema cloacal brasileiro. As variáveis que utilizaremos são:
+
+* **EDUCACIONAIS**
+  * % dos ocupados com ensino fundamental completo 2010
+  * % dos ocupados com ensino médio completo 2010                                 * IDEB anos iniciais do ensino fundamental 2015                                 * % de docentes na rede privada do fundamental com formação adequada 2016
+  * Taxa de analfabetismo - 15 anos ou mais de idade 2016
+
+* **ECONÔMICAS**
+  * Produto Interno Bruto per capita 2016                                         * Participação da Agropecuária no Valor Adicionado 2016
+  * Participação da Indústria no Valor Adicionado 2016
+  * % de pobres 2016
+
+* **SAÚDE**
+  * % de nascidos vivos com pelo menos sete consultas de pré-natal 2016
+  * % de nascidos vivos com baixo peso ao nascer 2016
+  * Mortalidade infantil 2016
+
+* **SOCIAIS**
+  * % de cobertura vegetal natural 2016
+  * Índice de Gini 2016
 
 
 # Análise Exploratória
 
-```{r}
+Nesta seção veremos um breve resumo das variáveis de estudo, com medidas descritivas, medidas de dispresão e gráficos de dispersão. Para simplificar a análise gráfica da Taxa do Saneamento Básico, iremos classificá-lo:
+
+* Taxa do Saneamento < 0.2 -> Saneamento Péssimo
+* 0.2 <= Taxa do Saneamento < 0.4 -> Saneamento Ruim
+* 0.4 <= Taxa do Saneamento < 0.6 -> Saneamento Médio
+* Taxa do Saneamento >= 0.6 -> Saneamento Bom
+
+## Variáveis Educacionais
+
+Na análise das variáveis educacionais, três são taxas e apenas o IDEB é o índice, assim percebemos que tem-se uma proximidade entre a média e a mediana. Com todos os valores medianos das taxas ficando entre 40 e 60, assim mostrando que essas métricas indicam uma precariedade na educação brasileira, conforme podemos ver pela Tabela \@ref(tab:tab1). 
+
+
+```{r tab1}
+fastrep::describe(df %>% 
+                    select(`% dos ocupados com ensino fundamental completo 2010`, `% dos ocupados com ensino médio completo 2010`, `IDEB anos iniciais do ensino fundamental 2015`,`% de docentes na rede privada do fundamental com formação adequada 2016`, )) 
+```
+
+Observa-se que a maioria dos estados tem entre 30% e 50% dos trabalhadores com ensino médio ou fundamental completos e pelas Figuras \@ref(fig:fig1) \@ref(fig:fig2) percebe-se que existe tendência de crescimento da Avaliação do Saneamento concomitantemente com a porcentagem dos trabalhadores ocupados com ensino fundamental ou médio completo.
+
+```{r fig1, fig.cap="Comportamento da variável: Porcentagem de trabalhadores com ensino fundamental."}
 boxplot(`% dos ocupados com ensino fundamental completo 2010`) +
   density(`% dos ocupados com ensino fundamental completo 2010`)
 ```
 
-```{r}
+```{r fig2, fig.cap="Comportamento da variável: Porcentagem de trabalhadores com ensino médio."}
 boxplot(`% dos ocupados com ensino médio completo 2010`) +
   density(`% dos ocupados com ensino médio completo 2010`)
 ```
 
-```{r}
-boxplot(`% dos ocupados com ensino superior completo 2010`) +
-  density(`% dos ocupados com ensino superior completo 2010`)
+Conforme as Figuras \@ref(fig:fig3) e \@ref(fig:fig4), o IDEB tem valores semelhantes para as três menores classificações da Avaliação do Saneamento, com o nível bom se sobressaindo, assim como para a porcentagem de docentes com formação adequado no ensino privado, em que as avaliações de Péssimo a Médio são parecidos e com a qualificação do saneamento como boa, sendo pouco superior.
+
+
+```{r fig3, fig.cap="Comportamento da variável: IDEB do ensino fundamental."}
+boxplot(`IDEB anos iniciais do ensino fundamental 2015`) +
+  density(`IDEB anos iniciais do ensino fundamental 2015`)
 ```
 
 
+```{r fig4, fig.cap="Comportamento da variável: Porcentagem de docentes com formação adequada no ensino privado."}
+boxplot(`% de docentes na rede privada do fundamental com formação adequada 2016`) +
+  density(`% de docentes na rede privada do fundamental com formação adequada 2016`)
+```
+
+## Variáveis econômicas
+
+Outro tipo de variável que deve impactar diretamente a classificação do saneamento básico são as variáveis econômicas, em que pela Tabela \@ref(tab:tab2), notamos um desvio padrão grande para o PIB per capita e a % de pobres e em todas as medidas de resumo a participação da agropecuária é inferior a participação da indústria na economia do estado.
+
+
+```{r tab2}
+fastrep::describe(df %>% 
+                    select(`Produto Interno Bruto per capita 2016`, `Participação da Agropecuária no Valor Adicionado 2016`,`Participação da Indústria no Valor Adicionado 2016`, `% de pobres 2016`)) 
+```
+
+É perceptível que a conforme diminui a % de pobres existe uma tendência de aumento na avaliação do saneamento, no entanto com poucas diferenças para a classificação Ruim e Médio. Pela Figura \@ref(fig:fig5), temos que as classificações Péssimo, Ruim e Médio estão com valores muito próximos.
+
+```{r fig5, fig.cap="Comportamento da variável: PIB per capita."}
+boxplot(`Produto Interno Bruto per capita 2016`) +
+  density(`Produto Interno Bruto per capita 2016`)
+```
+
+```{r fig8, fig.cap="Comportamento da variável: Porcentagem de pessoas em situação de pobreza."}
+boxplot(`% de pobres 2016`) +
+  density(`% de pobres 2016`)
+```
+
+Também identifica-se uma tendência de crescimento da participação da indústria conjuntamente com o crescimento da mediana da classificação do saneamento, de acordo com a Figura \@ref(fig:fig6). Entretanto na Figura \@ref(fig:fig7) temos o exato oposto em que podemos notar que conforme cresce a classificação diminui a participação da agropecuária.
+
+```{r fig6, fig.cap="Comportamento da variável: Participação da agropecuária na economia."}
+boxplot(`Participação da Agropecuária no Valor Adicionado 2016`) +
+  density(`Participação da Agropecuária no Valor Adicionado 2016`)
+```
+
+```{r fig7, fig.cap="Comportamento da variável: Participação da indústria na economia."}
+boxplot(`Participação da Indústria no Valor Adicionado 2016`) +
+  density(`Participação da Indústria no Valor Adicionado 2016`)
+```
+
+## Variáveis da saúde
+
+O tipo de variável que mais se correlaciona com os níveis do saneamento são as variáveis da saúde
+
+Outro tipo de variável que deve impactar diretamente a classificação do saneamento básico são as variáveis econômicas, em que pela Tabela \@ref(tab:tab3), tem-se bons valores de nascidos com acompanhamento médico e com bons valores dos nascido com baixo peso. Para o desvio padrão a Mortalidade Infantil e os nascidos com baixo peso tem valores baixos. 
+
+```{r tab3}
+fastrep::describe(df %>% 
+                    select(`% de nascidos vivos com pelo menos sete consultas de pré-natal 2016`, `% de nascidos vivos com baixo peso ao nascer 2016`,`Mortalidade infantil 2016`)) 
+```
+
+Nas Figuras \@ref(fig:fig10) e \@ref(fig:fig11), é facilmente notado uma tendência crescente e uma tendência decrescente, respectivamente com os níveis do saneamento. No entanto, a Figura \@ref(fig:fig9) os níveis Ruim e Médio são muito próximos, com a maioria da porcentagem dos nascidos vivos ficando entre 55 e 80%.
+
+```{r fig9, fig.cap="Comportamento da variável: Porcentagem de nascidos vivos com cuidado na gravidez adequado."}
+boxplot(`% de nascidos vivos com pelo menos sete consultas de pré-natal 2016`) +
+  density(`% de nascidos vivos com pelo menos sete consultas de pré-natal 2016`)
+```
+
+```{r fig10, fig.cap="Comportamento da variável: Porcentagem de nascidos vivos com com baixo peso."}
+boxplot(`% de nascidos vivos com baixo peso ao nascer 2016`) +
+  density(`% de nascidos vivos com baixo peso ao nascer 2016`)
+```
+
+```{r fig11, fig.cap="Comportamento da variável: Mortalidade infantil."}
+boxplot(`Mortalidade infantil 2016`) +
+  density(`Mortalidade infantil 2016`)
+```
+
+## Variáveis sociais 
+
+As variáveis sociais são variáveis que medem a desigualdade social e o impacto do desmatamento de vegetação natural. Conforme demonstrado pela Tabela \@ref(tab:tab4) percebemos que as variáveis são completamente opostas quanto ao desvio padrão, com a cobertura vegetal brasileira ficando com valores intermediários de desmatamento, no entanto com alto desvio padrão, ao contrário do índice de gini, com desvio padrão baixo, mas também com média razoável.
+
+```{r tab4}
+fastrep::describe(df %>% 
+                    select(`% de cobertura vegetal natural 2016`, 
+                           `Índice de Gini 2016`)) 
+```
+
+
+Nas Figuras \@ref(fig:fig10) e \@ref(fig:fig11), é facilmente notado uma tendência crescente e uma tendência decrescente, respectivamente com os níveis do saneamento. No entanto, a Figura \@ref(fig:fig9) os níveis Ruim e Médio são muito próximos, com a maioria da porcentagem dos nascidos vivos ficando entre 55 e 80%.
+
+Percebe-se uma característica peculiar na Figura \@ref(fig:fig12), em que conforme cresce o desmatamento cresce a classificação do saneamento básico, com o intervalo dos valores sendo amplo de 25% a 75%. No entanto, na Figura \@ref(fig:fig13) não é perceptível nenhuma tendência do Índice de Gini com a Avaliação do Saneamento. 
+
+```{r fig12, fig.cap="Comportamento da variável: Porcentagem de cobertura vegetal natural."}
+boxplot(`% de cobertura vegetal natural 2016`) +
+  density(`% de cobertura vegetal natural 2016`)
+```
+
+```{r fig13, fig.cap="Comportamento da variável: Índice de Gini."}
+boxplot(`Índice de Gini 2016`) +
+  density(`Índice de Gini 2016`)
+```
+
 # Análise Inferencial
 
-# Conclusão
+Nessa seção realizaremos e verificaremos o ajuste do modelo de regressão beta. Conjuntamente com a análise de diagnóstico, em que busca encontrar possíveis distorções das suposições do modelo, principalmente observações discrepantes e mal especificação do modelo.
 
-# Apêndice
+Outra etapa importante da análise inferencial é a análise de resíduos, onde verificamos a adequação da distribuição. Para finalizar a análise inferencial é realizado de testes de hipóteses, apresentação de coeficientes e seleção do modelo.
 
-\section{Section name}
+## Análise de Diagnóstico
 ```{r}
 
 fit1 <- betareg(Saneamento ~ 
@@ -118,20 +256,26 @@ fit1 <- betareg(Saneamento ~
 
 summary(fit1)
 
-# library(lmtest)         # Teste reset
-# lrtest(fit1, . ~ . + 
-#          I(predict(fit1, type = "link")^2))
-# lrtest(fit1, . ~ . + 
-#          I(predict(fit1, type = "link")^3))
 
 residuot2<- residuals(fit1, type= "sweighted2")
 yajust<-fitted.values(fit1)
 yhat=hatvalues(fit1)
 dcook<- cooks.distance(fit1)
+residuot2_df<- data.frame(residuot2)
 
 deviance<- sum(residuals(fit1, tipe= "deviance")^2)
+```
 
-#---indices X residuos
+## Distância de cook
+```{r}
+ggplot(df, aes(x=index(Saneamento), y= dcook))+
+  geom_point(size=1.5)+
+  labs(x = "Índices", y = "Distância de Cook")
+```
+
+## Índices vs Resíduos
+
+```{r}
 ggplot(df, aes(x=index(Saneamento),y=residuot2))+
   geom_point(size=1.5) + 
   geom_hline(yintercept=3, colour="red2", 
@@ -141,21 +285,21 @@ ggplot(df, aes(x=index(Saneamento),y=residuot2))+
   geom_hline(yintercept=-3, colour="red2", 
              linewidth=0.5,  linetype="dashed")+
   labs(x = "Índices das observações", y = "Resíduos")
-#---indices X medida h, hat values
+
+```
+
+
+## Alavancagem
+
+```{r}
 ggplot(df, aes(x=index(Saneamento), y=yhat))+
   geom_point(size=1.5) + 
   labs(x = "Índice das observações", y = "htt")
-#--- y vs residuos
-ggplot(df, aes(x=Saneamento, y=residuot2))+
-  geom_point(size=1.5) + 
-  geom_hline(yintercept=3, colour="red2", 
-             linewidth=0.5,  linetype="dashed") +
-  geom_hline(yintercept=0, colour="black", 
-             linewidth=0.7, linetype="dashed") +  
-  geom_hline(yintercept=-3, colour="red2", 
-            linewidth=0.5,  linetype="dashed")+
-  labs(x = "y", y = "Resíduos")
-#--- Y ajustado vs resíduos Padronizados 2
+```
+
+## Y ajustado vs Resíduos 
+
+```{r}
 ggplot(df, aes(x=yajust, y=residuot2))+
   geom_point(size=1.5) + 
   geom_hline(yintercept=3, colour="red2", size=0.5, 
@@ -166,20 +310,25 @@ ggplot(df, aes(x=yajust, y=residuot2))+
              linetype="dashed")+
   labs(x = "y ajustado", y = "Resíduos")
 
-#--- Distancia de Cook | influencia de uma observacao em relaçao a todos os n valores
-ggplot(df, aes(x=index(Saneamento), y= dcook))+
-  geom_point(size=1.5)+
-  labs(x = "Índices", y = "Distância de Cook")
-#--- y vs y ajustado
-ggplot(df, aes(x=Saneamento, y=yajust))+
+```
+
+## Índices vs Resíduos
+
+```{r}
+ggplot(df, aes(x=Saneamento, y=residuot2))+
   geom_point(size=1.5) + 
-  geom_smooth(method = "lm", linetype ="dashed",
-              size=0.5, col = "blue")+
-  labs(x = "y observado", y = "y ajustado")
+  geom_hline(yintercept=3, colour="red2", 
+             linewidth=0.5,  linetype="dashed") +
+  geom_hline(yintercept=0, colour="black", 
+             linewidth=0.7, linetype="dashed") +  
+  geom_hline(yintercept=-3, colour="red2", 
+            linewidth=0.5,  linetype="dashed")+
+  labs(x = "y", y = "Resíduos")
+```
 
-residuot2_df<- data.frame(residuot2)
+## Envelope Simulado
 
-## grafico envelope
+```{r}
 ggplot(data = residuot2_df, 
        mapping = aes(sample = residuot2))+
   geom_qq_band( alpha = 0.5, fill="white", col="black") +
@@ -191,22 +340,8 @@ ggplot(data = residuot2_df,
 
 ```
 
-
+## Critérios de Seleção de Modelos
 ```{r}
-fit1 <- betareg(Saneamento ~ 
-                  `% de docentes na rede privada do fundamental com formação adequada 2016` +
-                  `IDEB anos iniciais do ensino fundamental 2015`+
-                  `% de cobertura vegetal natural 2016` +
-                  `% de pobres 2016` +
-                  `Índice de Gini 2016`, 
-                data = df, x=TRUE)
-
-summary(fit1)
-#para acessar o pseudo-R2
-fit1$pseudo.r.squared
-# para acessar o valor de AIC e BIC
-AIC(fit1)
-BIC(fit1)
 n=length(fit1$y)
 k=1+length(fit1$coefficients$mean)
 BICc=-2*fit1$loglik+(n*k*log(n)/(n-k-1))
@@ -260,8 +395,41 @@ fit1d <- betareg(Saneamento ~
 
 AIC(fit1, fit1a, fit1b, fit1c, fit1d)
 BIC(fit1, fit1a, fit1b, fit1c, fit1d)
+```
+
+## Testes
+
+```{r}
+summary(fit1)
+```
+
+# Conclusão
+
+# Apêndice
+
+\section{Section name}
+
+```{r}
+summary(fit1)
+#para acessar o pseudo-R2
+fit1$pseudo.r.squared
+# para acessar o valor de AIC e BIC
+AIC(fit1)
+BIC(fit1)
+
 
 fit1=fit1d
 plot(fit1, which = 1:6)
 ```
+
+```{r get-labels, echo = FALSE}
+labs <- knitr::all_labels()
+labs <- setdiff(labs, c("setup", "get-labels"))
+
+```
+
+```{r ref.label=labs, echo=TRUE, eval=FALSE}
+
+```
+
 
