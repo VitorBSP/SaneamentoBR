@@ -1,0 +1,514 @@
+---
+title: "Uma síntese do saneamento básico brasileiro"
+subtitle: "por uma perspectiva estatística"
+author: "Vítor Pereira <br> <br>"
+institute: "Universidade Federal de Santa Maria"
+format: 
+    revealjs:
+        theme: sky
+        preview-links: auto
+        chalkboard: true
+        transition: fade
+        controls: true
+        width: 1190
+        height: 720
+        bibliography: bib.bib
+        nocite: |
+                @*
+css: style.css
+---
+
+
+## {auto-animate=true}
+
+::: {style="margin-top: 200px; font-size: 3em; font-weight: bold;"}
+Sumário
+:::
+
+
+## {auto-animate=true}
+
+::: {style="margin-top: 10px; font-size: 2em; font-weight: bold;"}
+Sumário
+:::
+
+::: {.incremental}
+
+<br />
+
+- Introdução
+
+- Análise Descritiva
+
+- Ajuste do Modelo 
+
+- Análise Inferencial
+
+- Conclusões
+:::
+
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+options(digits = 3)  
+options(scipen = 999)
+ggplot2::theme_set(ggplot2::theme_minimal()) 
+scale_fill_discrete = \(...) ggplot2::scale_fill_brewer(... , palette = "Set2") 
+library(dplyr)
+library(magrittr)
+library(betareg) 
+library(zoo) 
+library(ggplot2) 
+library(qqplotr) 
+library(patchwork)
+
+
+data = readr::read_csv('./data/data_modificado.csv')
+df = data[2:28, 2:ncol(data)]
+df = df %>% 
+  mutate(Saneamento = 
+           `% da população urbana residente em domicílios ligados à rede de esgotamento sanitário 2017`/100)
+df = df %>% 
+  mutate(Avaliacao_Saneamento = case_when(
+                                            (Saneamento < 0.2) ~ 'Péssimo',
+                                            (Saneamento >= 0.2 & Saneamento < 0.4) ~ 'Ruim',
+                                            (Saneamento >= 0.4 & Saneamento < 0.6) ~ 'Médio',
+                                            (Saneamento >= 0.6) ~ 'Bom')) %>%
+  mutate(Avaliacao_Saneamento = ordered(Avaliacao_Saneamento, 
+                                        levels = c("Péssimo", "Ruim", "Médio",
+                                                   "Bom")))
+
+
+fit2df<-function(fit) {
+  summary(fit) |>
+    (\(x) x$coefficients)() |>
+    data.frame() %>% 
+    .[,0:4]|>
+    round(3) |>
+    mutate(P.valor = ifelse(
+      `mean.Pr...z..` < 0.001,"<0.001*",
+      ifelse(`mean.Pr...z..` < 0.05, paste0(`mean.Pr...z..`, '*', sep = ''), `mean.Pr...z..`))) |>
+    select(-`mean.Pr...z..`,
+      "Estimativa" = "mean.Estimate",
+      "Desvio padrão" = "mean.Std..Error",
+      "Estatística z" = "mean.z.value"
+    )
+}
+
+boxplot <- function(v1, y){
+  ggplot(df, aes(x=Avaliacao_Saneamento, y={{v1}}, fill = Avaliacao_Saneamento)) + 
+    geom_boxplot(alpha=0.3) +
+    theme(legend.position="none") + labs(x = "Avaliação do Saneamento", y = y)
+}
+density <- function(v1, x){
+  ggplot(data=df, aes(x={{v1}})) +
+    geom_density(adjust=1.5, alpha=.4) +
+    labs(x = x)
+}
+dot <- function(v1, x){
+  ggplot(df, aes(x={{v1}}, y=Saneamento)) +
+  geom_point() +
+  geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE) + labs(x = x, y = "Saneamento")
+}
+
+```
+
+
+# Introdução
+
+
+# 100.000.000 {.test}
+
+
+# 35.000.000 {.test}
+
+
+# 11.000 {.test}
+
+
+## Introdução
+
+<br/>
+
+<br/>
+
+
+#### 100.000.000 pessoas sem coleta de esgoto no Brasil
+
+<br/>
+
+
+#### 35.000.000 pessoas sem acesso à água tratada
+
+<br/>
+
+#### 11.000 pessoas morrem por ano por falta de saneamento básico
+
+
+## Introdução
+
+<br/>
+
+<br/>
+
+
+#### A variável a ser estuda é: porcentagem da população urbana residente em domicílios ligados à rede de esgotamento sanitário no ano de 2017
+
+<br/>
+
+
+#### As covariáveis são todas anteriores a 2017
+
+<br/>
+
+#### Todos os dados são provenientes do site AtlasBrasil
+
+::: footer
+Dados de 2022 
+:::
+
+
+## {auto-animate=true}
+::: {style="margin-top: 200px; font-size: 3em; font-weight: bold;"}
+Análise Descritiva
+:::
+
+
+## {auto-animate=true}
+
+::: {style="margin-top: 10px; font-size: 2em; font-weight: bold;"}
+Análise Descritiva
+:::
+
+#### Variáveis:
+
+::: {.panel-tabset}
+
+### Educacionais
+
+    - % dos ocupados com ensino fundamental completo 2010
+    - % dos ocupados com ensino médio completo 2010                                 
+    - IDEB anos iniciais do ensino fundamental 2015                                 
+    - % de docentes na rede privada do fundamental com formação adequada 2016
+    - Taxa de analfabetismo - 15 anos ou mais de idade 2016
+
+### Econômicas
+
+    - Produto Interno Bruto per capita 2016                                         
+    - Participação da Agropecuária no Valor Adicionado 2016
+    - Participação da Indústria no Valor Adicionado 2016
+    - % de pobres 2016
+
+### Saúde
+
+    - % de nascidos vivos com pelo menos sete consultas de pré-natal 2016
+    - % de nascidos vivos com baixo peso ao nascer 2016
+    - Mortalidade infantil 2016
+
+### Sociais
+
+    - % de cobertura vegetal natural 2016
+    - Índice de Gini 2016
+
+:::
+
+## {auto-animate=true}
+
+::: {style="margin-top: 10px; font-size: 2em; font-weight: bold;"}
+Análise Descritiva
+:::
+
+```{r}
+dot(`% de cobertura vegetal natural 2016`, "% de cobertura vegetal") 
+```
+
+
+## {auto-animate=true}
+
+::: {style="margin-top: 10px; font-size: 2em; font-weight: bold;"}
+Análise Descritiva
+:::
+
+```{r}
+(boxplot(`% de pobres 2016`, "% de pobres") + boxplot(`% dos ocupados com ensino médio completo 2010`, "Ocupados com Ensino Médio")) /
+(boxplot(`Participação da Agropecuária no Valor Adicionado 2016`, "Participação da Agropecuária") + boxplot(`Participação da Indústria no Valor Adicionado 2016`, "Participação da Indústria"))
+```
+
+
+## {auto-animate=true}
+
+::: {style="margin-top: 10px; font-size: 2em; font-weight: bold;"}
+Análise Descritiva
+:::
+
+```{r}
+(boxplot(`% de nascidos vivos com baixo peso ao nascer 2016`, "% de nascidos vivos com baixo peso") + boxplot(`% de nascidos vivos com pelo menos sete consultas de pré-natal 2016`, "% de nascidos com bons cuidados na gravidez"))/
+(boxplot(`% de cobertura vegetal natural 2016`, "% de cobertura vegetal") + boxplot(`Índice de Gini 2016`, "Índice de Gini"))
+```
+
+
+## {auto-animate=true}
+::: {style="margin-top: 200px; font-size: 3em; font-weight: bold;"}
+Análise Inferencial
+:::
+
+
+## {auto-animate=true}
+
+::: {style="margin-top: 10px; font-size: 2em; font-weight: bold;"}
+Análise Inferencial
+:::
+
+### Seleção de Modelos
+
+
+```{r}
+fit1 <- betareg(Saneamento ~ 
+                  `% de docentes na rede privada do fundamental com formação adequada 2016` +
+                  `IDEB anos iniciais do ensino fundamental 2015`+
+                  `% de cobertura vegetal natural 2016` +
+                  `% de pobres 2016` +
+                  `Índice de Gini 2016`, 
+                data = df, x=TRUE)
+fit1a <- betareg(Saneamento ~ 
+                  `% de docentes na rede privada do fundamental com formação adequada 2016` +
+                  `IDEB anos iniciais do ensino fundamental 2015`+
+                  `% de cobertura vegetal natural 2016` +
+                  `% de pobres 2016` +
+                  `Índice de Gini 2016`, 
+                data = df, x=TRUE,
+                 link = "probit")
+fit1b <- betareg(Saneamento ~ 
+                  `% de docentes na rede privada do fundamental com formação adequada 2016` +
+                  `IDEB anos iniciais do ensino fundamental 2015`+
+                  `% de cobertura vegetal natural 2016` +
+                  `% de pobres 2016` +
+                  `Índice de Gini 2016`, 
+                data = df, x=TRUE,
+                 link = "cloglog")
+fit1c <- betareg(Saneamento ~ 
+                  `% de docentes na rede privada do fundamental com formação adequada 2016` +
+                  `IDEB anos iniciais do ensino fundamental 2015`+
+                  `% de cobertura vegetal natural 2016` +
+                  `% de pobres 2016` +
+                  `Índice de Gini 2016`, 
+                data = df, x=TRUE,
+                 link = "cauchit")
+fit1d <- betareg(Saneamento ~ 
+                  `% de docentes na rede privada do fundamental com formação adequada 2016` +
+                  `IDEB anos iniciais do ensino fundamental 2015`+
+                  `% de cobertura vegetal natural 2016` +
+                  `% de pobres 2016` +
+                  `Índice de Gini 2016`, 
+                data = df, x=TRUE,
+                 link = "loglog")
+n=length(fit1$y)
+k=1+length(fit1$coefficients$mean)
+BICc=-2*fit1$loglik+(n*k*log(n)/(n-k-1))
+HQ=-2*fit1$loglik+(2*k*log(n))
+HQc=-2*fit1$loglik+(2*k*log(log(n))/(n-k-1))
+
+ka=1+length(fit1a$coefficients$mean)
+BICca=-2*fit1a$loglik+(n*ka*log(n)/(n-ka-1))
+HQa=-2*fit1a$loglik+(2*ka*log(n))
+HQca=-2*fit1a$loglik+(2*ka*log(log(n))/(n-ka-1))
+
+kb=1+length(fit1b$coefficients$mean)
+BICcb=-2*fit1b$loglik+(n*kb*log(n)/(n-kb-1))
+HQb=-2*fit1b$loglik+(2*kb*log(n))
+HQcb=-2*fit1b$loglik+(2*kb*log(log(n))/(n-kb-1))
+
+kc=1+length(fit1c$coefficients$mean)
+BICcc=-2*fit1c$loglik+(n*kc*log(n)/(n-kc-1))
+HQc=-2*fit1c$loglik+(2*kc*log(n))
+HQcc=-2*fit1c$loglik+(2*kc*log(log(n))/(n-kc-1))
+
+kd=1+length(fit1d$coefficients$mean)
+BICcd=-2*fit1d$loglik+(n*kd*log(n)/(n-kd-1))
+HQd=-2*fit1d$loglik+(2*kd*log(n))
+HQcd=-2*fit1d$loglik+(2*kd*log(log(n))/(n-kd-1))
+
+metrics = data.frame("Logit" = c(AIC(fit1), BIC(fit1), BICc, HQ, HQc),
+           "Probit" = c(AIC(fit1a), BIC(fit1a), BICca, HQa, HQca),
+           "Cloglog" = c(AIC(fit1b), BIC(fit1b), BICcb, HQb, HQcb),
+           "Cauchit" = c(AIC(fit1c), BIC(fit1c), BICcc, HQc, HQcc),
+           "Loglog" = c(AIC(fit1d), BIC(fit1d), BICcd, HQd, HQcd))
+rownames(metrics) = c('AIC', 'BIC', 'BICc', 'HQ', 'HQc')
+```
+
+```{r aic}
+metrics %>% fastrep::tbl('Resumo dos critérios de seleção de molelos para função de ligação')
+```
+
+
+## {auto-animate=true}
+
+::: {style="margin-top: 10px; font-size: 2em; font-weight: bold;"}
+Análise Inferencial
+:::
+
+### Seleção de Modelos
+
+```{r r2}
+
+r2 = data.frame("Pseudo R^2" = c(fit1$pseudo.r.squared, fit1a$pseudo.r.squared,
+                            fit1b$pseudo.r.squared, fit1c$pseudo.r.squared,
+                            fit1d$pseudo.r.squared)) 
+rownames(r2) = c('Logit', 'Probit', 'Cloglog', 'Cauchit', 'Loglog')
+r2 %>% 
+  fastrep::tbl('Pseudo r quadrado para cada função de ligação')
+
+```
+
+## {auto-animate=true}
+
+::: {style="margin-top: 10px; font-size: 2em; font-weight: bold;"}
+Análise Inferencial
+:::
+
+### Análise de Diagnóstico
+
+```{r}
+residuot2<- residuals(fit1, type= "sweighted2")
+yajust<-fitted.values(fit1)
+yhat=hatvalues(fit1)
+dcook<- cooks.distance(fit1)
+residuot2_df<- data.frame(residuot2)
+deviance<- sum(residuals(fit1, tipe= "deviance")^2)
+```
+
+```{r cook, fig.cap="Distância de Cook e Alavancagem para a Regressão Beta do Saneamento Brasileiro"}
+ggplot(df, aes(x=index(Saneamento), y= dcook))+
+  geom_point(size=1.5)+
+  labs(x = "Índices", y = "Distância de Cook") + 
+  ggplot(df, aes(x=index(Saneamento), y=yhat))+
+  geom_point(size=1.5) + 
+  labs(x = "Índices", y = "Alavancagem")
+```
+
+## {auto-animate=true}
+
+::: {style="margin-top: 10px; font-size: 2em; font-weight: bold;"}
+Análise Inferencial
+:::
+
+### Análise de Diagnóstico
+
+```{r res, fig.cap="Análise de Resíduo para a Regressão Beta do Saneamento Brasileiro"}
+ggplot(df, aes(x=index(Saneamento),y=residuot2))+
+  geom_point(size=1.5) + 
+  geom_hline(yintercept=3, colour="red2", 
+             linewidth=0.5,  linetype="dashed") +
+  geom_hline(yintercept=2, colour="orange", 
+             linewidth=0.5,  linetype="dashed") +
+  geom_hline(yintercept=-2, colour="orange", 
+             linewidth=0.5,  linetype="dashed") +
+  geom_hline(yintercept=0, colour="black", 
+             linewidth=0.7, linetype="dashed") +  
+  geom_hline(yintercept=-3, colour="red2", 
+             linewidth=0.5,  linetype="dashed")+
+  labs(x = "Índices das observações", y = "Resíduos") +
+ggplot(df, aes(x=yajust, y=residuot2))+
+  geom_point(size=1.5) + 
+  geom_hline(yintercept=3, colour="red2", size=0.5, 
+             linetype="dashed") +
+  geom_hline(yintercept=2, colour="orange", 
+             linewidth=0.5,  linetype="dashed") +
+  geom_hline(yintercept=-2, colour="orange", 
+             linewidth=0.5,  linetype="dashed") +
+  geom_hline(yintercept=0, colour="black", size=0.7,
+             linetype="dashed") +  
+  geom_hline(yintercept=-3, colour="red2", size=0.5, 
+             linetype="dashed")+
+  labs(x = "y ajustado", y = "Resíduos")
+```
+
+
+## {auto-animate=true}
+
+::: {style="margin-top: 10px; font-size: 2em; font-weight: bold;"}
+Análise Inferencial
+:::
+
+### Análise de Diagnóstico
+
+```{r env, fig.cap="Envelope Simulado da Regressão Beta do Saneamento Brasileiro"}
+ggplot(data = residuot2_df, 
+       mapping = aes(sample = residuot2))+
+  geom_qq_band( alpha = 0.5, fill="white", col="black") +
+  
+  stat_qq_line(size=0.5, linetype="dashed") + 
+  stat_qq_point(size=2) +
+  scale_fill_discrete("Bandtype")  +
+  labs(x = "Quantis teóricos", y = "Quantis amostrais")
+```
+
+
+## {auto-animate=true}
+::: {style="margin-top: 200px; font-size: 3em; font-weight: bold;"}
+Ajuste do Modelo
+:::
+
+
+## {auto-animate=true}
+
+::: {style="margin-top: 10px; font-size: 2em; font-weight: bold;"}
+Ajuste Modelo
+:::
+
+
+```{r est}
+fit1 <- betareg(Saneamento ~ 
+                  `Docentes` +
+                  `IDEB anos iniciais` +
+                  `cobertura vegetal` +
+                  `% de pobres` +
+                  `Gini`, 
+                data = df %>% 
+                select("Docentes" = `% de docentes na rede privada do fundamental com formação adequada 2016`,
+                  "IDEB anos iniciais" = `IDEB anos iniciais do ensino fundamental 2015`,
+                  "cobertura vegetal" = `% de cobertura vegetal natural 2016`,
+                  "% de pobres" = `% de pobres 2016`,
+                  "Gini" = `Índice de Gini 2016`, Saneamento), x=TRUE)
+fit2df(fit1) %>% 
+  fastrep::tbl('Estatísticas do Modelo Ajustado')
+```
+
+::: footer
+Docentes = Formação adequado dos docentes da rede privada 
+:::
+
+
+## {auto-animate=true}
+::: {style="margin-top: 200px; font-size: 3em; font-weight: bold;"}
+Conclusões
+:::
+
+
+## {auto-animate=true}
+
+::: {style="margin-top: 10px; font-size: 2em; font-weight: bold;"}
+Conclusões
+:::
+
+<br/>
+
+#### Não é pretensão dizer que há causalidade entre o Saneamento e as covariáveis
+
+<br/>
+
+#### Buscamos verificar a qualidade das políticas públicas e o desenvolvimento do estado
+
+<br/>
+
+#### Nota-se que o desenvolvimento social e financeiro está relacionado com a qualidade do saneamento
+
+
+
+## Bibliografia
+
+![](https://media2.giphy.com/media/PSKAppO2LH56w/giphy.gif){.absolute top=370 left=200 width="200" height=250"}
+
+![](https://static.leonoticias.com/www/multimedia/202212/09/media/brasil-croacia.gif){.absolute top=370 right=200 width="300" height=400"}
+
+
